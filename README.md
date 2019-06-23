@@ -1,2 +1,5 @@
-# FAQ_Parallel_DT
-Parallel Delaunay Triangulation using Cuda
+# Parallel Delaunay Triangulation using Cuda
+contributors:
+- **F**arzin Mohammadi
+- **A**li Yazdanpanah
+- Amirhosein (**Q**)Kiamarzi
