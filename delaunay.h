@@ -1,4 +1,12 @@
-void delaunay(long start, long end, long *leftEdgeIdx, long *rightEdgeIdx);
+#ifndef _DELAUNAY_H_
+#define _DELAUNAY_H_
+
+#include <stdio.h>
+#include <stdlib.h>
+#include "datasetlib.h"
+#include "delaunay.h"
+
+void delaunay(pointSet pointSet, long start, long end, long *leftEdgeIdx, long *rightEdgeIdx);
 long createEdge(long startPointIdx, long endPointIdx);
 void addEdgeToRing(long edgeOneIdx, long edgeTwoIdx, long commonPointIdx);
 double triangleCheck(long pointOneIdx, long pointTwoIdx, long pointThreeIdx);
@@ -12,3 +20,4 @@ void printEdge();
 void printPoint(long p);
 void deleteEdge(long e);
 
+#endif

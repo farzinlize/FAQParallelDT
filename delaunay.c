@@ -1,88 +1,13 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include"datasetlib.h"
-#include "delaunay.h"
+#include"delaunay.h"
 
+PointSet pointSet;
+EdgeSet edgeSet;
 
-extern Point *points;
-extern Edge *edges;
-extern long edgeCounter;
-extern long nPoints;
-extern long nEdges;
-
-extern char *INFO, *WARN, *ERROR;
-
-/*
-void delaunay(long start, long end, long *leftEdgeIdx, long *rightEdgeIdx);
-long createEdge(long startPointIdx, long endPointIdx);
-void addEdgeToRing(long edgeOneIdx, long edgeTwoIdx, long commonPointIdx);
-double triangleCheck(long pointOneIdx, long pointTwoIdx, long pointThreeIdx);
-long makeTriangle(long edgeOneIdx, long pointOneIdx, long edgeTwoIdx, long pointTwoIdx, int side);
-static void merge(long rightSubLeftEdgeIdx, long s, long leftSubRightEdgeIdx, long u, long *lowerCommonTangentIdx);
-static void findLowerTangent(long rightSubLeftEdgeIdx, long s, long leftSubRightEdgeIdx, long u, long *leftLowerEdgeIdx, long *lowerLowerOriginIdx, long *rightLowerEdgeIdx, long *rightLowerOriginIdx);
-
-void printEdges();
-void printEdge();
-void printPoint(long p);
-void deleteEdge(long e);
-
-
-int main(int argc, char* argv[1])
-{
-    long leftEdgeIdx, rightEdgeIdx;
-    if(argc != 2) {
-        printf("Usage: dtpp <data_file_as_csv>\n");
-        exit(1);
-    }
-
-    char *inputFileName = argv[1];
-    long temp, i = 0,j=0;
-    long numEdges = 0;
-
-    FILE *inputFile = fopen(inputFileName, "r");
-
-    points = malloc(sizeof(Point) * COUNT);
-    if(points == NULL)
-    {
-        printf("Failed to allocate memory!\n");
-        exit(3);
-    }
-
-    for(j=0;j<COUNT;j++) {
-        points[j].x = -1.00;
-        points[j].y = -1.00;
-        points[j].entryPoint = -1;
-    }
-
-    while(fscanf(inputFile, "%ld,%f,%f", &temp, &points[i].x, &points[i].y) == 3)
-    {
-        i++;
-    }
-    fclose(inputFile);
-
-    printf("%ld points read into memory from file.\n", i);
-    numEdges = 3*i - 6;
-    edges = malloc(sizeof(Edge) * numEdges);
-    for(j=0;j<numEdges;j++) {
-        edges[j].origin = -1;
-        edges[j].destination = -1;
-        edges[j].originNext = -1;
-        edges[j].originPrev = -1;
-        edges[j].destinationNext = -1;
-        edges[j].destinationPrev = -1;
-    }
-
-
-    for(i=0; i<COUNT; i++)
-    {
-        printf("(%f, %f)\n", points[i].x, points[i].y);
-    }
-
-    delaunay(0, COUNT-1, &leftEdgeIdx, &rightEdgeIdx);
-    printEdges();
-    return 0;
-}
-*/
+//extern Point *points;
+// extern Edge *edges;
+// extern long edgeCounter;
+// extern long nPoints;
+// extern long nEdges;
 
 void delaunay(long start, long end, long *leftEdgeIdx, long *rightEdgeIdx)
 {
@@ -118,10 +43,10 @@ void delaunay(long start, long end, long *leftEdgeIdx, long *rightEdgeIdx)
         merge(rightSubLeftEdgeIdx, mid, leftSubRightEdgeIdx, mid+1, &lowerCommonTangentIdx);
         //COME BACK HERE, if MUTATING IN MERGE
 
-        if(edges[lowerCommonTangentIdx].origin == start) {
+        if(edgeSet.edges[lowerCommonTangentIdx].origin == start) {
             leftSubLeftEdgeIdx = lowerCommonTangentIdx;
         }
-        if(edges[lowerCommonTangentIdx].destination == end) {
+        if(edgeSet.edges[lowerCommonTangentIdx].destination == end) {
             rightSubRightEdgeIdx = lowerCommonTangentIdx;
         }
 
@@ -134,20 +59,20 @@ void delaunay(long start, long end, long *leftEdgeIdx, long *rightEdgeIdx)
 long createEdge(long startPointIdx, long endPointIdx)
 {
     //printf("Creating Edge between %ld and %ld\n", startPointIdx, endPointIdx);
-    long c = edgeCounter;
-    edges[c].origin = startPointIdx;
-    edges[c].destination = endPointIdx;
+    long c = edgeSet.size;
+    edgeSet.edges[c].origin = startPointIdx;
+    edgeSet.edges[c].destination = endPointIdx;
     
-    edges[c].originNext = edges[c].originPrev = edges[c].destinationNext = edges[c].destinationPrev = c;
+    edgeSet.edges[c].originNext = edgeSet.edges[c].originPrev = edgeSet.edges[c].destinationNext = edgeSet.edges[c].destinationPrev = c;
     
-    if(points[startPointIdx].entryPoint == -1) {
-        points[startPointIdx].entryPoint = c;
+    if(pointSet.points[startPointIdx].entryPoint == -1) {
+        pointSet.points[startPointIdx].entryPoint = c;
     }
-    if(points[endPointIdx].entryPoint == -1) {
-        points[endPointIdx].entryPoint = c;
+    if(pointSet.points[endPointIdx].entryPoint == -1) {
+        pointSet.points[endPointIdx].entryPoint = c;
     }
 
-    edgeCounter++;
+    edgeSet.size++;
     //printEdge(c);
     return c;
 }
@@ -156,32 +81,34 @@ void addEdgeToRing(long edgeOneIdx, long edgeTwoIdx, long commonPointIdx)
 {
     long tempEdgeIdx;
     
-    if(edges[edgeOneIdx].origin == commonPointIdx) {
-        tempEdgeIdx = edges[edgeOneIdx].originNext;
-        edges[edgeOneIdx].originNext = edgeTwoIdx;
+    if(edgeSet.edges[edgeOneIdx].origin == commonPointIdx) {
+        tempEdgeIdx = edgeSet.edges[edgeOneIdx].originNext;
+        edgeSet.edges[edgeOneIdx].originNext = edgeTwoIdx;
     } else {
-        tempEdgeIdx = edges[edgeOneIdx].destinationNext;
-        edges[edgeOneIdx].destinationNext = edgeTwoIdx;
+        tempEdgeIdx = edgeSet.edges[edgeOneIdx].destinationNext;
+        edgeSet.edges[edgeOneIdx].destinationNext = edgeTwoIdx;
     }
-    if(edges[tempEdgeIdx].origin == commonPointIdx) {
-        edges[tempEdgeIdx].originPrev = edgeTwoIdx;
+    if(edgeSet.edges[tempEdgeIdx].origin == commonPointIdx) {
+        edgeSet.edges[tempEdgeIdx].originPrev = edgeTwoIdx;
     } else {
-        edges[tempEdgeIdx].destinationPrev = edgeTwoIdx;
+        edgeSet.edges[tempEdgeIdx].destinationPrev = edgeTwoIdx;
     }
-    if(edges[edgeTwoIdx].origin == commonPointIdx) {
-        edges[edgeTwoIdx].originNext = tempEdgeIdx;
-        edges[edgeTwoIdx].originPrev = edgeOneIdx;
+    if(edgeSet.edges[edgeTwoIdx].origin == commonPointIdx) {
+        edgeSet.edges[edgeTwoIdx].originNext = tempEdgeIdx;
+        edgeSet.edges[edgeTwoIdx].originPrev = edgeOneIdx;
     } else {
-        edges[edgeTwoIdx].destinationNext = tempEdgeIdx;
-        edges[edgeTwoIdx].destinationPrev = edgeOneIdx;
+        edgeSet.edges[edgeTwoIdx].destinationNext = tempEdgeIdx;
+        edgeSet.edges[edgeTwoIdx].destinationPrev = edgeOneIdx;
     }
 
 }
 
 double triangleCheck(long pointOneIdx, long pointTwoIdx, long pointThreeIdx)
 {
-    return ( (points[pointTwoIdx].x - points[pointOneIdx].x) * (points[pointThreeIdx].y - points[pointOneIdx].y) 
-    - (points[pointTwoIdx].y - points[pointOneIdx].y) * (points[pointThreeIdx].x - points[pointOneIdx].x));
+    return ( (pointSet.points[pointTwoIdx].x - pointSet.points[pointOneIdx].x) * 
+    (pointSet.points[pointThreeIdx].y - pointSet.points[pointOneIdx].y) - 
+    (pointSet.points[pointTwoIdx].y - pointSet.points[pointOneIdx].y) * 
+    (pointSet.points[pointThreeIdx].x - pointSet.points[pointOneIdx].x));
 
 }
 
@@ -193,18 +120,18 @@ long makeTriangle(long edgeOneIdx, long pointOneIdx, long edgeTwoIdx, long point
     tempEdgeIdx = createEdge(pointOneIdx, pointTwoIdx);
 
     if(side == 0) {
-        if(edges[edgeOneIdx].origin == pointOneIdx) {
-            addEdgeToRing(edges[edgeOneIdx].originPrev, tempEdgeIdx, pointOneIdx);
+        if(edgeSet.edges[edgeOneIdx].origin == pointOneIdx) {
+            addEdgeToRing(edgeSet.edges[edgeOneIdx].originPrev, tempEdgeIdx, pointOneIdx);
         } else {
-            addEdgeToRing(edges[edgeOneIdx].destinationPrev, tempEdgeIdx, pointOneIdx);
+            addEdgeToRing(edgeSet.edges[edgeOneIdx].destinationPrev, tempEdgeIdx, pointOneIdx);
         }
         addEdgeToRing(edgeTwoIdx, tempEdgeIdx, pointTwoIdx);
     } else {
         addEdgeToRing(edgeOneIdx, tempEdgeIdx, pointOneIdx);
-        if(edges[edgeTwoIdx].origin == pointTwoIdx) {
-            addEdgeToRing(edges[edgeTwoIdx].originPrev, tempEdgeIdx, pointTwoIdx);
+        if(edgeSet.edges[edgeTwoIdx].origin == pointTwoIdx) {
+            addEdgeToRing(edgeSet.edges[edgeTwoIdx].originPrev, tempEdgeIdx, pointTwoIdx);
         } else {
-            addEdgeToRing(edges[edgeTwoIdx].destinationPrev, tempEdgeIdx, pointTwoIdx);
+            addEdgeToRing(edgeSet.edges[edgeTwoIdx].destinationPrev, tempEdgeIdx, pointTwoIdx);
         }
     }
 
@@ -388,48 +315,48 @@ void deleteEdge(long e)
 {
     long p, q;
 
-    p = edges[e].origin;
-    q = edges[e].destination;
+    p = edgeSet.edges[e].origin;
+    q = edgeSet.edges[e].destination;
 
-    if(points[p].entryPoint == e) {
-        points[p].entryPoint = edges[e].originNext;
+    if(pointSet.points[p].entryPoint == e) {
+        pointSet.points[p].entryPoint = edgeSet.edges[e].originNext;
     }
-    if(points[q].entryPoint == e) {
-        points[q].entryPoint = edges[e].destinationNext;
+    if(pointSet.points[q].entryPoint == e) {
+        pointSet.points[q].entryPoint = edgeSet.edges[e].destinationNext;
     }
 
-    if(edges[edges[e].originNext].origin == p) {
-        edges[edges[e].originNext].originPrev = edges[e].originPrev;
+    if(edgeSet.edges[edgeSet.edges[e].originNext].origin == p) {
+        edgeSet.edges[edgeSet.edges[e].originNext].originPrev = edgeSet.edges[e].originPrev;
     } else {
-        edges[edges[e].originNext].destinationPrev = edges[e].originPrev;
+        edgeSet.edges[edgeSet.edges[e].originNext].destinationPrev = edgeSet.edges[e].originPrev;
     }
 
-    if(edges[edges[e].originPrev].origin == p) {
-        edges[edges[e].originPrev].originNext = edges[e].originNext;
+    if(edgeSet.edges[edgeSet.edges[e].originPrev].origin == p) {
+        edgeSet.edges[edgeSet.edges[e].originPrev].originNext = edgeSet.edges[e].originNext;
     } else {
-        edges[edges[e].originPrev].destinationNext = edges[e].originNext;
+        edgeSet.edges[edgeSet.edges[e].originPrev].destinationNext = edgeSet.edges[e].originNext;
     }
 
-    if(edges[edges[e].destinationNext].origin == q) {
-        edges[edges[e].destinationNext].originPrev = edges[e].destinationPrev;
+    if(edgeSet.edges[edgeSet.edges[e].destinationNext].origin == q) {
+        edgeSet.edges[edgeSet.edges[e].destinationNext].originPrev = edgeSet.edges[e].destinationPrev;
     } else {
-        edges[edges[e].destinationNext].destinationPrev = edges[e].destinationPrev;
+        edgeSet.edges[edgeSet.edges[e].destinationNext].destinationPrev = edgeSet.edges[e].destinationPrev;
     }
 
-    if(edges[edges[e].destinationPrev].origin == q) {
-        edges[edges[e].destinationPrev].originNext = edges[e].destinationNext;
+    if(edgeSet.edges[edgeSet.edges[e].destinationPrev].origin == q) {
+        edgeSet.edges[edgeSet.edges[e].destinationPrev].originNext = edgeSet.edges[e].destinationNext;
     } else {
-        edges[edges[e].destinationPrev].destinationNext = edges[e].destinationNext;
+        edgeSet.edges[edgeSet.edges[e].destinationPrev].destinationNext = edgeSet.edges[e].destinationNext;
     }
 
     
 
-    edges[e].origin = -1;
-    edges[e].destination = -1;
-    edges[e].originNext = -1;
-    edges[e].destinationNext = -1;
-    edges[e].originPrev = -1;
-    edges[e].destinationPrev = -1;
+    edgeSet.edges[e].origin = -1;
+    edgeSet.edges[e].destination = -1;
+    edgeSet.edges[e].originNext = -1;
+    edgeSet.edges[e].destinationNext = -1;
+    edgeSet.edges[e].originPrev = -1;
+    edgeSet.edges[e].destinationPrev = -1;
 
 }
 
@@ -441,14 +368,14 @@ void printEdges(long myStart, long myEnd)
     long temp;
 
     for(i=myStart;i<myEnd;i++) {
-        u = &points[i];
-        eStart = e = points[i].entryPoint;
+        u = &pointSet.points[i];
+        eStart = e = pointSet.points[i].entryPoint;
         do {
             temp = otherPoint(e,i);
 
-            v = &points[temp];
+            v = &pointSet.points[temp];
             if(u < v) {
-                printf("%ld %ld\n", u-points, v-points);
+                printf("%ld %ld\n", u-pointSet.points, v-pointSet.points);
             }
             e = nextEdge(e, i);
         } while(e != eStart);
@@ -460,7 +387,7 @@ void writeEdges(const char* filename, long myStart, long myEnd)
     FILE* f = fopen(filename, "w");
    
     if(f == NULL) {
-        logger(ERROR, "Failed to write to file");
+        // logger(ERROR, "Failed to write to file");
         exit(1);
     }
 
@@ -470,14 +397,14 @@ void writeEdges(const char* filename, long myStart, long myEnd)
     long temp;
 
     for(i=myStart;i<myEnd;i++) {
-        u = &points[i];
-        eStart = e = points[i].entryPoint;
+        u = &pointSet.points[i];
+        eStart = e = pointSet.points[i].entryPoint;
         do {
             temp = otherPoint(e,i);
 
-            v = &points[temp];
+            v = &pointSet.points[temp];
             if(u < v) {
-                fprintf(f, "%ld %ld\n", u-points, v-points);
+                fprintf(f, "%ld %ld\n", u-pointSet.points, v-pointSet.points);
             }
             e = nextEdge(e, i);
         } while(e != eStart);
@@ -489,10 +416,11 @@ void writeEdges(const char* filename, long myStart, long myEnd)
 void printEdge(long e)
 {
     printf("[origin:%ld; destination:%ld; originNext:%ld; originPrev:%ld; destinationNext:%ld; destinationPrev:%ld]\n",
-            edges[e].origin, edges[e].destination, edges[e].originNext, edges[e].originPrev, edges[e].destinationNext, edges[e].destinationPrev);
+            edgeSet.edges[e].origin, edgeSet.edges[e].destination, edgeSet.edges[e].originNext, 
+            edgeSet.edges[e].originPrev, edgeSet.edges[e].destinationNext, edgeSet.edges[e].destinationPrev);
 }
 
 void printPoint(long p)
 {
-    printf("[x:%lf, y=%lf, entryPoint:%ld]\n", points[p].x, points[p].y, points[p].entryPoint);
+    printf("[x:%lf, y=%lf, entryPoint:%ld]\n", pointSet.points[p].x, pointSet.points[p].y, pointSet.points[p].entryPoint);
 }
