@@ -1,11 +1,11 @@
 #include"datasetlib.h"
 
-pointSet genrate_random_dataset()
-{
+// pointSet genrate_random_dataset()
+// {
 
-}
+// }
 
-pointSet read_dataset_file()
-{
+// pointSet read_dataset_file()
+// {
 
-}
+// }
