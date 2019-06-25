@@ -1,7 +1,7 @@
 #include"delaunay.h"
 
-PointSet pointSet;
-EdgeSet edgeSet;
+extern PointSet pointSet;
+extern EdgeSet edgeSet;
 
 //extern Point *points;
 // extern Edge *edges;
