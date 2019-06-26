@@ -1,6 +1,7 @@
 #include"kernels.cuh"
 
-
+/* ### device functions ### */
+/* ## geometry functions ## */
 __device__ bool inside_triangle(Triangle t, Point p)
 {
     double area = 0.5 * (-t.b.y * t.c.x + t.a.y * (-t.b.x + t.c.x) + t.a.x * (t.b.y - t.c.y) + t.b.x * t.c.y);
@@ -15,6 +16,55 @@ __device__ bool inside_triangle(Triangle t, Point p)
     return (s > 0) && (t > 0) && ((s + t) < 2 * A * sign);
 }
 
+__device__ bool inCircle(Triangle t, Point p)
+{
+    //TODO
+}
+/* ------------------------------------------------------------------------------------- */
+
+/* ## data structor functions ## */
+/* #     suspect data sets     # */
+__device__ SuspectSet makeSuspectSet()
+{
+    //TODO
+}
+
+__device__ void addSuspect(SuspectSet set, Triangle t, Point edge_a, Point edge_b)
+{
+    //TODO
+}
+
+__device__ Suspect popSuspect(SuspectSet set)
+{
+    //TODO
+}
+
+__device__ bool isNeighbour_suspect(Suspect suspect, Triangle t)
+{
+    //TODO
+}
+
+/* # triangle data set # */
+__device__ Triangle makeTriangle(Point a, point b, point c)
+{
+    //TODO
+}
+
+__device__ bool deleteTriangle(Triangle t)
+{
+    //TODO
+}
+
+__device__ Point nextPointTriangle(Triangle t, Point p)
+{
+    //TODO
+}
+
+__device__ Point prePointTriangle(Triangle t, Point p)
+{
+    //TODO
+}
+/* ------------------------------------------------------------------------------------- */
 
 __global__ void add_point_incrimental(Regins regins)
 {
@@ -25,7 +75,7 @@ __global__ void add_point_incrimental(Regins regins)
     int tid = threadIdx.x;
 
     /* first thread initial susspects list */
-    TriangleSet susspects;
+    SuspectSet susspects;
     if(tid == 0)
         suspects = makeSuspectSet();
 
@@ -60,7 +110,8 @@ __global__ void add_point_incrimental(Regins regins)
     {
         while(suspects.size != 0)
         {
-            if(tid == 0) Suspect current = popSuspect(suspects);
+            Suspect current;
+            if(tid == 0) current = popSuspect(suspects);
             bool fail = false;
     
             __syncthreads();
@@ -114,13 +165,13 @@ __global__ void add_point_incrimental(Regins regins)
     }
 }
 
-__global__ void merge(PointSet set, EdgeSet edges)
-{
-    int tid = threadIdx.x;
-}
+// __global__ void merge(PointSet set, EdgeSet edges)
+// {
+//     int tid = threadIdx.x;
+// }
 
 
-__global__ void delauney(Set set)
-{
-    Regin regin = set[threadIdx.y][threadIdx.x];
-}
+// __global__ void delauney(Set set)
+// {
+//     Regin regin = set[threadIdx.y][threadIdx.x];
+// }
