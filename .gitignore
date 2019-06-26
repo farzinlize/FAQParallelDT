@@ -3,3 +3,4 @@ backups/
 dataset/
 build/
 *.csv
+test.*
